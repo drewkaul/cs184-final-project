@@ -46,15 +46,45 @@
 <div>
 
 <h2>Overview</h2>
-<p>
+<p>The virtual camera in video games and CG movie scenes is critical to telling stories. A camera swooping in between highrises tells a different story from a camera
+    strapped to the forehead of an adventurer sprinting away from a threat. Normally, cameras are programmed to move along and look down a predefined spline. While this
+    works well for most cases, it fails to capture the "natural" movements that a camera undergoes. For example a camera strapped to a car driving down a bumpy road vibrates
+    and rotates randomly. A camera attached to a skateboard undergoes similar random movements that are different from that of a camera attached to a car or a runner. Defining
+    these fine movements programatically would be difficult and may not reflect the physical world. So, our project aims to use Monocular Visual Odometry to extract the translation and
+    rotation that a real camera experiences just by looking at the video that it takes. We then construct a spline out of the position data and have a virtual camera follow this spline
+    while it's playing back the rotations recorded from the real camera. This creates a slightly more convincing virtual camera movement that more closely reflects the physical world.
 </p>
-
-<p>Example of inserting math</p>
-<p class="math">$f(x) = \frac{1}{x}$</p>
 
 <h2>Visual Odometry</h2>
 
-<p>@Ajay</p>
+<p>Visual odometry is a general term for recovering position and rotation data of a camera simply by looking at a set of images that it took when moving. Although smartphones 
+  have accelerometers, numerical integration to compute position is very inaccurate and prone to "drift". Gyroscope data for rotations is much more reliable but requires filtering
+  to be usable. Instead we rely on principles of stereo vision to compute the relative pose between two "cameras". In otherwords we can compute the relative translation and rotation
+  that the camera undergoes to go from some frame $F_i$ to $F_{i+1}$.
+</p>
+
+<p>Assume the camera undergoes rotation $R$ and translation $T$ between the two frames, then a 3D point $P_i$ is related to $P_{i+1}$ by the following relation.</p>
+<p class="math">$P_{i+1} = R(P_i - T)$</p>
+<p>Epipolar geometry tells us that $P_{i+1}$, $T$, and $P_i - T$ are coplanar. The Wikpedia entry for <a href="https://en.wikipedia.org/wiki/Epipolar_geometry">Epipolar geometry</a> as well as the
+listed references have some great visualizations to help convince you of this fact.</p>
+<p>We know that any vector that lies along a plane is orthogonal to the plane's normal vector, so we can write this constraint.</p>
+<p class="math">$(P_i - T)^T(T \times P_i) = 0$</p>
+<p class="math">$(R^TP_{i+1})^T(T \times P_i) = 0$</p>
+<p>Recall that a cross product $a \times b$ can be re-written as a matrix-vector multiplication with the rank 2 skew-matrix of $a$ denoated as $[a]_{\times} b$</p>
+<p class="math">$(R^TP_{i+1})^T([T]_{\times}P_i) = 0$</p>
+<p class="math">$P_{i+1}^TR[T]_{\times}P_{i}$ = 0</p>
+<p class="math">$E = R[T]_{\times}$</p>
+
+<p>We have reduced our problem of recovering the relative pose between two "cameras" to estimating the essential matrix $E$ and decomposing it to recover $R$ and $[T]_x$. In order to do this in practice
+  we used OpenCV's implementation of <a href="http://www.ee.oulu.fi/research/imag/courses/Sturm/nister04.pdf">Nister's 5-Point algorithm</a> which can efficiently estimate the Essential Matrix by assuming knowledge of the camera calibration parameters. We ran camera calibration on
+  the iPhone 6S to recover its focal length and principle point. The distortion parameters were negligible. If you're curious about how this relates to the more commonly known Fundamental Matrix, $F = K^{-T}EK^{-1}$.
+  So, another way to compute $E$ is to use the 8-Point algorithm to estimate $F$ and then move it into "normalized camera coordinates" by factoring out the camera matrix $K$.
+</p>
+
+<p>Recovering $R$ and $[T]_x$ from $E$ can be done using SVD, but there are four possible solutions to the rotations and translations. OpenCV's <a href="https://docs.opencv.org/3.0-beta/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html#void%20decomposeEssentialMat(InputArray%20E,%20OutputArray%20R1,%20OutputArray%20R2,%20OutputArray%20t)">decomposeEssentialMat</a>
+tests all possible solutions to returns the one that makes the most geometric sense.</p>
+
+<p>After $R$ and $T$ are recovered for frames $F$ and $F_{i+1}$ for all $i$, we can generate the camera's path by hitting a point at the origin with $R_i$ and $T_i$ to get the subsequent point.</p>
 
 <h2>Filtering Algorithms</h2>
 
@@ -68,13 +98,45 @@
 
 <h2>THREE.js GUI and Environment</h2>
 
+<p>In order to present our results we used a popular WebGL wrapper called THREE.js which makes it easy to define and animate 3D scenes that can run on the web.
+    The details about how the UI works aren't very interesting but it involved a lot of software engineering fundamentals like modularization of code and defining
+    data structures. We spent some time refactoring the code base to make it easy to visualize arbitrary translations and rotations that are passed in so that we
+    could debug and iterate quickly.
+</p>
+
 <p>@Ajay, Drew</p>
 
 <h2>Results</h2>
 
-<p>Original Video</p>
-<p>Video in THREE.js environment</p>
+<h3>Source video fed into Visual Odometry Algorithm</h3>
+
+<center><iframe width="560" height="315" src="https://www.youtube.com/embed/894ZjR8pNrk" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>d
+
+<h3>Unfiltered visual odometry, plotting XZ translation</h3>
+
+<center><iframe width="560" height="315" src="https://www.youtube.com/embed/u7lgNX81hHk" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
+
+<img width="100%" src="images/vo_path.png"/>
+<figcaption>Averaged recovered XZ path of camera</figcaption>
+
+
+<h3>Camera Movement in Virtual Environment</h3>
+
+<center><iframe width="560" height="315" src="https://www.youtube.com/embed/-UMBoPSFo80" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
+
 <p>Embed the actual live demo here.</p>
+
+<h2>Contributions</h2>
+
+<h3>Ajay Ramesh</h3>
+<ul>
+    <li>Visual odometry</li>
+    <li>Frontend for web based 3D rendering and animation</li>
+</ul>
+
+<h3>Drew Kaul</h3>
+
+<h3>Hersh Godse</h3>
 
 <h2>References</h2>
 
