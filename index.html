@@ -81,7 +81,7 @@ listed references have some great visualizations to help convince you of this fa
   So, another way to compute $E$ is to use the 8-Point algorithm to estimate $F$ and then move it into "normalized camera coordinates" by factoring out the camera matrix $K$.
 </p>
 
-<p>Recovering $R$ and $[T]_x$ from $E$ can be done using SVD, but there are four possible solutions to the rotations and translations. OpenCV's <a href="https://docs.opencv.org/3.0-beta/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html#void%20decomposeEssentialMat(InputArray%20E,%20OutputArray%20R1,%20OutputArray%20R2,%20OutputArray%20t)">decomposeEssentialMat</a>
+<p>Recovering $R$ and $[T]_{\times}$ from $E$ can be done using SVD, but there are four possible solutions to the rotations and translations. OpenCV's <a href="https://docs.opencv.org/3.0-beta/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html#void%20decomposeEssentialMat(InputArray%20E,%20OutputArray%20R1,%20OutputArray%20R2,%20OutputArray%20t)">decomposeEssentialMat</a>
 tests all possible solutions to returns the one that makes the most geometric sense.</p>
 
 <p>After $R$ and $T$ are recovered for frames $F$ and $F_{i+1}$ for all $i$, we can generate the camera's path by hitting a point at the origin with $R_i$ and $T_i$ to get the subsequent point.</p>
