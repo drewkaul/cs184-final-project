@@ -52,12 +52,12 @@
     and rotates randomly. A camera attached to a skateboard undergoes similar random movements that are different from that of a camera attached to a car or a runner. Defining
     these fine movements programatically would be difficult and may not reflect the physical world. So, our project aims to use Monocular Visual Odometry to extract the translation and
     rotation that a real camera experiences just by looking at the video that it takes. We then construct a spline out of the position data and have a virtual camera follow this spline
-    while it's playing back the rotations recorded from the real camera. This creates a slightly more convincing virtual camera movement that more closely reflects the physical world.
+    while it's playing back the rotations recorded from the real camera. This creates a more convincing virtual camera movement that more closely reflects the physical world.
 </p>
 
 <h2>Visual Odometry</h2>
 
-<p>Visual odometry is a general term for recovering position and rotation data of a camera simply by looking at a set of images that it took when moving. Although smartphones 
+<p>Visual odometry is a general term for recovering position and rotation data of a camera simply by looking at a set of images that it took when moving. Although smartphones
   have accelerometers, numerical integration to compute position is very inaccurate and prone to "drift". Gyroscope data for rotations is much more reliable but requires filtering
   to be usable. Instead we rely on principles of stereo vision to compute the relative pose between two "cameras". In otherwords we can compute the relative translation and rotation
   that the camera undergoes to go from some frame $F_i$ to $F_{i+1}$.
@@ -94,7 +94,7 @@ tests all possible solutions to returns the one that makes the most geometric se
 <img width="100%" src="images/imuRaw.png"/>
 <p>Pitch again is the primary axis of movement here, and is relatively quite good. However, the yaw and roll have several erronious "peaks" that shouldn't exist. We wrote a custom filter that iteratively finds all portions of a curve with a slope over a certain threshold, and then collapses/dampens these peaks to a more acceptable amount. The following depicts our attempts to filter out the roll axis data:</p>
 <img width="100%" src="images/imuFilter.png"/>
-<p>The blue line is the initial data, and the green line is the initial data with only a Savitzky–Golay filter. Note that the Savitzky-Golay filter is an interpolation algorithm that smoothens data without loosing signal tendancy. See the references section for more information. While this filter makes data much smoother, it does little to reduce the peaks. First applying the aformentioned custom-filter to reduce high-slope peaks, and then applying a Savitzky-Golay filter yeilds a much nicer signal, shown in red. </p>
+<p>The blue line is the initial data, and the green line is the initial data with only a Savitzky–Golay filter. Note that the Savitzky-Golay filter is an interpolation algorithm that smoothens data without losing signal tendancy by using a set of convolution coefficients. See the references section for more information. While this filter makes the data much smoother, it does little to reduce the peaks. First applying the aformentioned custom-filter to reduce high-slope peaks, and then applying a Savitzky-Golay filter yeilds a much nicer signal, shown in red. </p>
 
 <p>Through our experiments with IMU data, we came to the conclusion that Visual Odometry was a much more viable path to pursue. The Visual Odometry approaches detailed above give both translation and rotation movements from each frame to the next. The natue of these two movement types are quite different and warrented different filtering approaches. We filtered translation data with a simple Savitzky-Golay filter along with a moving-average filter, with the original source translations shown in blue and the result of smoothening shown in green:</p>
 <img width="100%" src="images/VO_trans.png"/>
@@ -108,14 +108,18 @@ tests all possible solutions to returns the one that makes the most geometric se
 
 <p>@Drew</p>
 
-<p>Talk about framerate interpolation here</p>
+<p>When using the IMU data, one issue that we ran into was the difference in the frame rate of the captured sensor data and
+the frame rate at which the GUI rendered the environment. More specifically, the rotation and translation data was captured at 50 frames per second
+whereas the 3D scene was rendered at 60 frames per second. To fix this issue, we linearly interpolated the IMU data according to the frame rate. </p>
 
 <h2>THREE.js GUI and Environment</h2>
 
 <p>In order to present our results we used a popular WebGL wrapper called THREE.js which makes it easy to define and animate 3D scenes that can run on the web.
     The details about how the UI works aren't very interesting but it involved a lot of software engineering fundamentals like modularization of code and defining
     data structures. We spent some time refactoring the code base to make it easy to visualize arbitrary translations and rotations that are passed in so that we
-    could debug and iterate quickly.
+    could debug and iterate quickly. Furthermore, we added the ability to easily mix and match different 3D scenes, motion (rotations + translations), and paths
+    to generate custom environments. Finally, we added parameters such as duration and perspective so that viewers could change the speed with which the camera
+    traversed its path and switch between looking at the virtual camera trajectory from a bird's eye view to a first person view and vice-versa.
 </p>
 
 <p>@Ajay, Drew</p>
@@ -152,6 +156,10 @@ tests all possible solutions to returns the one that makes the most geometric se
 </ul>
 
 <h3>Drew Kaul</h3>
+<ul>
+    <li>3D environment generation and frontend </li>
+    <li>Data and framerate interpolation </li>
+</ul>
 
 <h3>Hersh Godse</h3>
 <ul>
