@@ -38,7 +38,7 @@
 <body>
 
 <h1>Transferring Camera Motion from Video to 3D Graphics</h1>
-<h2>CS184 Spring 2019 Final</h2>
+<h2>CS184 Spring 2019 Final Project</h2>
 <h2>Ajay Ramesh, Drew Kaul, Hersh Godse</h2>
 
 <center><iframe width="560" height="315" src="https://www.youtube.com/embed/zsQs6sJ5Yt0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
@@ -113,11 +113,11 @@ whereas the 3D scene was rendered at 60 frames per second. To fix this issue, we
 <h2>THREE.js GUI and Environment</h2>
 
 <p>In order to present our results we used a popular WebGL wrapper called THREE.js which makes it easy to define and animate 3D scenes that can run on the web.
-    The details about how the UI works aren't very interesting but it involved a lot of software engineering fundamentals like modularization of code and defining
+    The details about how the UI works aren't as interesting as the visual odometry, but it involved a lot of software engineering fundamentals like modularization of code and defining
     data structures. We spent some time refactoring the code base to make it easy to visualize arbitrary translations and rotations that are passed in so that we
     could debug and iterate quickly. Furthermore, we added the ability to easily mix and match different 3D scenes, motion (rotations + translations), and paths
     to generate custom environments. Finally, we added parameters such as duration and perspective so that viewers could change the speed with which the camera
-    traversed its path and switch between looking at the virtual camera trajectory from a bird's eye view to a first person view and vice-versa.
+    traversed its path and switch between looking at the virtual camera trajectory from a bird's eye view to first person and vice-versa.
 </p>
 
 <h2>Results</h2>
