@@ -88,11 +88,25 @@ tests all possible solutions to returns the one that makes the most geometric se
 
 <h2>Filtering Algorithms</h2>
 
-<p>@Hersh</p>
+<p>We initially tried to capture motion via data from the IMU sensors embedded within modern smartphones. Specifically, we wanted to use the three-axis gyroscopes to determine object attitude (roll, pitch, yaw), and thus accurately simulate/re-create the rotations the smartphone originally took in the real world. Unfortunately, the small IMU sensors found in smartphones are far too noisy to be used to accurately measure attitude, much less to be integrated to determine position (since integrating compounds errors). Most of the collected data looked as follows (this is for a walking straight motion):</p>
+<img width="100%" src="images/imuNoise.png"/>
+<p>The green line, pitch, is the primary axis of movement for this pattern. Thus the small movements corresponding to walking make sense, but we have an immense amount of noise on the other two axes. This noise proved too great to work with, and motivated our move to Visual Odometry (VO) as detailed above. We did try to filter out some of the IMU data noise for some cleaner datasets, such as the one shown here (for a stationary movement raising and lowering an arm holding the phone, over a 90 degree arc):</p>
+<img width="100%" src="images/imuRaw.png"/>
+<p>Pitch again is the primary axis of movement here, and is relatively quite good. However, the yaw and roll have several erronious "peaks" that shouldn't exist. We wrote a custom filter that iteratively finds all portions of a curve with a slope over a certain threshold, and then collapses/dampens these peaks to a more acceptable amount. The following depicts our attempts to filter out the roll axis data:</p>
+<img width="100%" src="images/imuFilter.png"/>
+<p>The blue line is the initial data, and the green line is the initial data with only a Savitzky–Golay filter. Note that the Savitzky-Golay filter is an interpolation algorithm that smoothens data without loosing signal tendancy. See the references section for more information. While this filter makes data much smoother, it does little to reduce the peaks. First applying the aformentioned custom-filter to reduce high-slope peaks, and then applying a Savitzky-Golay filter yeilds a much nicer signal, shown in red. </p>
+
+<p>Through our experiments with IMU data, we came to the conclusion that Visual Odometry was a much more viable path to pursue. The Visual Odometry approaches detailed above give both translation and rotation movements from each frame to the next. The natue of these two movement types are quite different and warrented different filtering approaches. We filtered translation data with a simple Savitzky-Golay filter along with a moving-average filter, with the original source translations shown in blue and the result of smoothening shown in green:</p>
+<img width="100%" src="images/VO_trans.png"/>
+<p>Rotation data on the other hand is extremely high frequency. In addition, there are several frames that erroniously have a full 180 degree rotation instead of no rotation (due to the depth perception problems of monocular odometry). The original raw data for roll rotation is shown below, depicting this pattern:</p>
+<img width="100%" src="images/VO_rot_raw.png"/>
+<p>We first cleaned the data by writing a custom filter to remove these spikes of ~180 degrees, yielding a series of small-magnitude but extremely high frequency roll rotations. This observation was similar for both other axes of rotation. To smoothen this, the Savitzky-Golay filter is not a good choice - it performs poorly on such high frequency data. The winning approach was a low-pass filter, that removed all high frequency spectra from our data. The results of this filtering are shown below (blue curve has just the ~180 degree filter, and green curve applies a low-pass filter on the blue curve data):</p>
+<img width="100%" src="images/VO_rot_filter.png"/>
+<p>These final filtered values for all three axes of translation and rotation were then fed into our THREE.js environment to visually show the results and quality of our movement capturing efforts.</p>
 
 <h2>Experiments with IMU</h2>
 
-<p>@Hersh, Drew</p>
+<p>@Drew</p>
 
 <p>Talk about framerate interpolation here</p>
 
@@ -124,7 +138,7 @@ tests all possible solutions to returns the one that makes the most geometric se
 
 <center><iframe width="560" height="315" src="https://www.youtube.com/embed/-UMBoPSFo80" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
 
-<p>Embed the actual live demo here.</p>
+<p>TBD: Embed the actual live demo here.</p>
 
 <h2>Contributions</h2>
 
@@ -137,6 +151,11 @@ tests all possible solutions to returns the one that makes the most geometric se
 <h3>Drew Kaul</h3>
 
 <h3>Hersh Godse</h3>
+<ul>
+  <li>Data collection and cleaning</li>
+  <li>Data filtering/interpolating</li>
+  <li>Data visualizations</li>
+</ul>
 
 <h2>References</h2>
 
@@ -147,6 +166,7 @@ tests all possible solutions to returns the one that makes the most geometric se
     <li><a href="https://docs.opencv.org/3.0-beta/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html#findessentialmat">OpenCV findEssentialMat</a></li>
     <li><a href="https://docs.opencv.org/3.0-beta/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html#void%20decomposeEssentialMat(InputArray%20E,%20OutputArray%20R1,%20OutputArray%20R2,%20OutputArray%20t)">OpenCV decomposeEssentialMat</a></li>
     <li><a href="https://threejs.org">THREE.js Documentation</a></li>
+    <li><a href="https://en.wikipedia.org/wiki/Savitzky%E2%80%93Golay_filter">Savitzky-Golay Filter</a></li>
 </ul>
 
 </body>
