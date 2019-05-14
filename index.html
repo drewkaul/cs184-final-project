@@ -86,6 +86,15 @@ tests all possible solutions to returns the one that makes the most geometric se
 
 <p>After $R$ and $T$ are recovered for frames $F$ and $F_{i+1}$ for all $i$, we can generate the camera's path by hitting a point at the origin with $R_i$ and $T_i$ to get the subsequent point.</p>
 
+<p>During the implementation, we encountered several issues regarding coordinate systems (as usual), because OpenCV's camera coordinate system is different from OpenGL's coordinate system. We had to compute the
+  correct transform that would take us from one system to the other. We also encountered several bugs regarding noisy rotation and translation data which are addressed in the filtering section below.
+</p>
+
+<p>It's not clear if this particular problem of transferring motion data to 3D environments has been documented in literature, so we didn't use a reference for this project. Our approach of using Visual Odometry to create believable camera movements
+  seems unique in and of itself, but this approach would fall under the larger umbrella of motion capture for animation, which has obviously been done before. Since we used off the shelf libraries for the key routines in Visual Odometry (estimating and decomposing the Essential Matrix),
+  our approach does not significantly diverge from existing literature.
+</p>
+
 <h2>Filtering Algorithms</h2>
 
 <p>We initially tried to capture motion via data from the IMU sensors embedded within modern smartphones. Specifically, we wanted to use the three-axis gyroscopes to determine object attitude (roll, pitch, yaw), and thus accurately simulate/re-create the rotations the smartphone originally took in the real world. Unfortunately, the small IMU sensors found in smartphones are far too noisy to be used to accurately measure attitude, much less to be integrated to determine position (since integrating compounds errors). Most of the collected data looked as follows (this is for a walking straight motion):</p>
